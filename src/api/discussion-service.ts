@@ -9,143 +9,12 @@ import {
   Repository,
   UpdateDiscussionInput
 } from './types';
-
-const DISCUSSIONS_QUERY = `
-  query GetDiscussions($owner: String!, $name: String!, $first: Int!, $after: String) {
-    repository(owner: $owner, name: $name) {
-      discussions(first: $first, after: $after, orderBy: {field: UPDATED_AT, direction: DESC}) {
-        nodes {
-          id
-          number
-          title
-          body
-          createdAt
-          updatedAt
-          author {
-            login
-            avatarUrl
-          }
-          category {
-            id
-            name
-            emoji
-          }
-          comments {
-            totalCount
-          }
-          upvoteCount
-          url
-          locked
-          answerChosenAt
-          answerChosenBy {
-            login
-          }
-        }
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
-        totalCount
-      }
-    }
-  }
-`;
-
-const DISCUSSION_QUERY = `
-  query GetDiscussion($owner: String!, $name: String!, $number: Int!) {
-    repository(owner: $owner, name: $name) {
-      discussion(number: $number) {
-        id
-        number
-        title
-        body
-        createdAt
-        updatedAt
-        author {
-          login
-          avatarUrl
-        }
-        category {
-          id
-          name
-          emoji
-        }
-        comments(first: 50) {
-          nodes {
-            id
-            body
-            createdAt
-            updatedAt
-            author {
-              login
-              avatarUrl
-            }
-            isAnswer
-            upvoteCount
-            url
-            replies(first: 20) {
-              nodes {
-                id
-                body
-                createdAt
-                updatedAt
-                author {
-                  login
-                  avatarUrl
-                }
-                upvoteCount
-                url
-              }
-            }
-          }
-        }
-        upvoteCount
-        url
-        locked
-        answerChosenAt
-        answerChosenBy {
-          login
-        }
-      }
-    }
-  }
-`;
-
-const REPOSITORY_QUERY = `
-  query GetRepository($owner: String!, $name: String!) {
-    repository(owner: $owner, name: $name) {
-      id
-      name
-      owner {
-        login
-      }
-      discussionCategories(first: 20) {
-        nodes {
-          id
-          name
-          emoji
-          description
-          isAnswerable
-        }
-      }
-    }
-  }
-`;
-
-
-const UPDATE_DISCUSSION_MUTATION = `
-  mutation UpdateDiscussion($input: UpdateDiscussionInput!) {
-    updateDiscussion(input: $input) {
-      discussion {
-        id
-        number
-        title
-        body
-        updatedAt
-      }
-    }
-  }
-`;
+import {
+  GetDiscussionsDocument,
+  GetDiscussionDocument,
+  GetRepositoryDocument,
+  UpdateDiscussionDocument
+} from '../generated/graphql';
 
 
 export class DiscussionService {
@@ -166,7 +35,7 @@ export class DiscussionService {
     }
 
     const response = await this.client.query<{ repository: Repository }>(
-      REPOSITORY_QUERY,
+      GetRepositoryDocument,
       {
         owner: this.settings.repositoryOwner,
         name: this.settings.repositoryName
@@ -179,7 +48,7 @@ export class DiscussionService {
 
   async getDiscussions(first: number = 20, after?: string): Promise<DiscussionConnection> {
     const response = await this.client.query<{ repository: { discussions: DiscussionConnection } }>(
-      DISCUSSIONS_QUERY,
+      GetDiscussionsDocument,
       {
         owner: this.settings.repositoryOwner,
         name: this.settings.repositoryName,
@@ -193,7 +62,7 @@ export class DiscussionService {
 
   async getDiscussion(number: number): Promise<Discussion | null> {
     const response = await this.client.query<{ repository: { discussion: Discussion } }>(
-      DISCUSSION_QUERY,
+      GetDiscussionDocument,
       {
         owner: this.settings.repositoryOwner,
         name: this.settings.repositoryName,
@@ -212,7 +81,7 @@ export class DiscussionService {
 
   async updateDiscussion(input: UpdateDiscussionInput): Promise<Discussion> {
     const response = await this.client.mutation<{ updateDiscussion: { discussion: Discussion } }>(
-      UPDATE_DISCUSSION_MUTATION,
+      UpdateDiscussionDocument,
       { input }
     );
 

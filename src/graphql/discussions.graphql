@@ -1,0 +1,175 @@
+query GetDiscussions($owner: String!, $name: String!, $first: Int!, $after: String) {
+  repository(owner: $owner, name: $name) {
+    discussions(first: $first, after: $after, orderBy: {field: UPDATED_AT, direction: DESC}) {
+      nodes {
+        id
+        number
+        title
+        body
+        createdAt
+        updatedAt
+        author {
+          login
+          avatarUrl
+        }
+        category {
+          id
+          name
+          emoji
+        }
+        comments {
+          totalCount
+        }
+        upvoteCount
+        url
+        locked
+        answerChosenAt
+        answerChosenBy {
+          login
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      totalCount
+    }
+  }
+}
+
+query GetDiscussion($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    discussion(number: $number) {
+      id
+      number
+      title
+      body
+      createdAt
+      updatedAt
+      author {
+        login
+        avatarUrl
+      }
+      category {
+        id
+        name
+        emoji
+      }
+      comments(first: 50) {
+        totalCount
+        nodes {
+          id
+          body
+          createdAt
+          updatedAt
+          author {
+            login
+            avatarUrl
+          }
+          isAnswer
+          upvoteCount
+          url
+          replies(first: 20) {
+            nodes {
+              id
+              body
+              createdAt
+              updatedAt
+              author {
+                login
+                avatarUrl
+              }
+              upvoteCount
+              url
+            }
+          }
+        }
+      }
+      upvoteCount
+      url
+      locked
+      answerChosenAt
+      answerChosenBy {
+        login
+      }
+    }
+  }
+}
+
+query GetRepository($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    id
+    name
+    owner {
+      login
+    }
+    discussionCategories(first: 20) {
+      nodes {
+        id
+        name
+        emoji
+        description
+        isAnswerable
+      }
+    }
+  }
+}
+
+mutation UpdateDiscussion($input: UpdateDiscussionInput!) {
+  updateDiscussion(input: $input) {
+    discussion {
+      id
+      number
+      title
+      body
+      createdAt
+      updatedAt
+      author {
+        login
+        avatarUrl
+      }
+      category {
+        id
+        name
+        emoji
+      }
+      comments(first: 50) {
+        totalCount
+        nodes {
+          id
+          body
+          createdAt
+          updatedAt
+          author {
+            login
+            avatarUrl
+          }
+          isAnswer
+          upvoteCount
+          url
+          replies(first: 20) {
+            nodes {
+              id
+              body
+              createdAt
+              updatedAt
+              author {
+                login
+                avatarUrl
+              }
+              upvoteCount
+              url
+            }
+          }
+        }
+      }
+      upvoteCount
+      url
+      locked
+      answerChosenAt
+      answerChosenBy {
+        login
+      }
+    }
+  }
+}

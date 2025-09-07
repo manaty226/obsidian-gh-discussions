@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "version": "node version-bump.mjs && git add manifest.json versions.json"
+    "version": "node version-bump.mjs && git add manifest.json versions.json",
+    "codegen": "graphql-codegen --config codegen.yml",
+    "prebuild": "npm run codegen"
   },
   "keywords": [
     "obsidian-plugin",
@@ -16,6 +18,11 @@
   "author": "Your Name",
   "license": "MIT",
   "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.7",
+    "@graphql-codegen/typescript": "^4.1.6",
+    "@graphql-codegen/typescript-graphql-request": "^6.3.0",
+    "@graphql-codegen/typescript-operations": "^4.6.1",
+    "@octokit/graphql-schema": "^15.26.0",
     "@types/node": "^16.11.6",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",

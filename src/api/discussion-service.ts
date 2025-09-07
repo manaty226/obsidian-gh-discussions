@@ -1,12 +1,10 @@
+import { App } from 'obsidian';
 import { PluginSettings } from '../settings/settings';
 import { FileManager } from '../sync/file-manager';
 import { GitHubClient } from './github-client';
 import {
-  AddDiscussionCommentInput,
-  CreateDiscussionInput,
   Discussion,
   DiscussionCategory,
-  DiscussionComment,
   DiscussionConnection,
   Repository,
   UpdateDiscussionInput
@@ -134,19 +132,6 @@ const REPOSITORY_QUERY = `
   }
 `;
 
-const CREATE_DISCUSSION_MUTATION = `
-  mutation CreateDiscussion($input: CreateDiscussionInput!) {
-    createDiscussion(input: $input) {
-      discussion {
-        id
-        number
-        title
-        body
-        url
-      }
-    }
-  }
-`;
 
 const UPDATE_DISCUSSION_MUTATION = `
   mutation UpdateDiscussion($input: UpdateDiscussionInput!) {
@@ -162,21 +147,6 @@ const UPDATE_DISCUSSION_MUTATION = `
   }
 `;
 
-const ADD_DISCUSSION_COMMENT_MUTATION = `
-  mutation AddDiscussionComment($input: AddDiscussionCommentInput!) {
-    addDiscussionComment(input: $input) {
-      comment {
-        id
-        body
-        createdAt
-        author {
-          login
-          avatarUrl
-        }
-      }
-    }
-  }
-`;
 
 export class DiscussionService {
   private client: GitHubClient;
@@ -184,10 +154,10 @@ export class DiscussionService {
   private fileManager: FileManager;
   private repository: Repository | null = null;
 
-  constructor(client: GitHubClient, settings: PluginSettings) {
+  constructor(client: GitHubClient, settings: PluginSettings, app: App) {
     this.client = client;
     this.settings = settings;
-    this.fileManager = new FileManager(settings);
+    this.fileManager = new FileManager(settings, app);
   }
 
   async getRepository(): Promise<Repository> {
@@ -239,24 +209,6 @@ export class DiscussionService {
     return repo.discussionCategories.nodes;
   }
 
-  async createDiscussion(input: Omit<CreateDiscussionInput, 'repositoryId'>): Promise<Discussion> {
-    const repo = await this.getRepository();
-    
-    const response = await this.client.mutation<{ createDiscussion: { discussion: Discussion } }>(
-      CREATE_DISCUSSION_MUTATION,
-      {
-        input: {
-          ...input,
-          repositoryId: repo.id
-        }
-      }
-    );
-
-    const discussion = response.createDiscussion.discussion;
-    await this.fileManager.saveDiscussion(discussion);
-    
-    return discussion;
-  }
 
   async updateDiscussion(input: UpdateDiscussionInput): Promise<Discussion> {
     const response = await this.client.mutation<{ updateDiscussion: { discussion: Discussion } }>(
@@ -269,33 +221,11 @@ export class DiscussionService {
     return discussion;
   }
 
-  async addComment(input: AddDiscussionCommentInput): Promise<DiscussionComment> {
-    const response = await this.client.mutation<{ addDiscussionComment: { comment: DiscussionComment } }>(
-      ADD_DISCUSSION_COMMENT_MUTATION,
-      { input }
-    );
-
-    return response.addDiscussionComment.comment;
-  }
 
   async syncDiscussions(): Promise<void> {
-    let hasNextPage = true;
-    let after: string | undefined;
-    const allDiscussions: Discussion[] = [];
-
-    while (hasNextPage) {
-      const connection = await this.getDiscussions(50, after);
-      allDiscussions.push(...connection.nodes);
-      
-      hasNextPage = connection.pageInfo.hasNextPage;
-      after = connection.pageInfo.endCursor;
-    }
-
-    for (const discussion of allDiscussions) {
-      await this.fileManager.saveDiscussion(discussion);
-    }
-
-    console.log(`Synced ${allDiscussions.length} discussions`);
+    // Refreshes discussion data in memory only
+    // Markdown files will be created on-demand when "Open" is clicked
+    console.log('Discussion data refreshed - markdown files will be created when opened');
   }
 
   async pushMarkdownToGitHub(discussionNumber: number): Promise<{ success: boolean; error?: string }> {
@@ -312,9 +242,9 @@ export class DiscussionService {
   }
 
 
-  updateSettings(settings: PluginSettings): void {
+  updateSettings(settings: PluginSettings, app: App): void {
     this.settings = settings;
-    this.fileManager = new FileManager(settings);
+    this.fileManager = new FileManager(settings, app);
     this.repository = null;
   }
 

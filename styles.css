@@ -2,8 +2,10 @@
 
 .discussion-list-container {
   height: 100%;
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .discussion-list-header {
@@ -42,13 +44,16 @@
 }
 
 .category-filter {
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 6px;
   background: var(--background-primary);
   color: var(--text-normal);
   font-size: 13px;
   min-width: 150px;
+  line-height: 1.3;
+  height: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
   transition: all 0.2s ease;
 }
 
@@ -66,7 +71,27 @@
   padding: 24px;
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   background: var(--background-secondary);
+  min-height: 0;
+}
+
+.discussion-list-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.discussion-list-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.discussion-list-content::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-bg);
+  border-radius: 4px;
+  border: 1px solid var(--background-secondary);
+}
+
+.discussion-list-content::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-bg-hover);
 }
 
 .discussion-cards {
@@ -74,6 +99,7 @@
   grid-template-columns: repeat(auto-fill, minmax(390px, 1fr));
   gap: 10px;
   padding: 2px;
+  padding-bottom: 50px;
 }
 
 .discussion-card {
@@ -152,6 +178,7 @@
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
+  line-clamp: 4;
 }
 
 .discussion-card-stats {
@@ -167,8 +194,7 @@
 }
 
 .discussion-category {
-  background: var(--interactive-accent);
-  background-opacity: 0.1;
+  background-color: rgba(var(--interactive-accent-rgb), 0.1);
   color: var(--interactive-accent);
   padding: 4px 8px;
   border-radius: 12px;
@@ -300,6 +326,48 @@
   background: var(--interactive-accent-hover);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Update Confirmation Modal */
+.update-dates {
+  margin: 16px 0;
+  padding: 12px;
+  background: var(--background-secondary);
+  border-radius: 6px;
+}
+
+.update-dates p {
+  margin: 4px 0;
+  font-family: var(--font-monospace);
+  font-size: 13px;
+}
+
+.update-warning {
+  margin: 16px 0;
+  padding: 12px;
+  background: rgba(var(--color-orange-rgb), 0.1);
+  border: 1px solid var(--color-orange);
+  border-radius: 6px;
+}
+
+.update-warning p {
+  margin: 0;
+  color: var(--color-orange);
+  font-weight: 500;
+}
+
+.update-buttons {
+  margin-top: 20px;
+}
+
+.update-buttons .setting-item {
+  border: none;
+  padding: 0;
+}
+
+.update-buttons .setting-item-control {
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 /* Responsive Design */

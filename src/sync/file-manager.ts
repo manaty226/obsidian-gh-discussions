@@ -1,19 +1,21 @@
-import { TFile, TFolder, Vault, normalizePath } from 'obsidian';
+import { TFile, Vault, normalizePath, App } from 'obsidian';
 import { Discussion } from '../api/types';
 import { PluginSettings } from '../settings/settings';
+import { UpdateConfirmModal } from '../components/UpdateConfirmModal';
 
 export class FileManager {
   private settings: PluginSettings;
   private vault: Vault;
+  private app: App;
 
-  constructor(settings: PluginSettings) {
+  constructor(settings: PluginSettings, app: App) {
     this.settings = settings;
-    this.vault = (window as any).app.vault;
+    this.vault = app.vault;
+    this.app = app;
   }
 
   async saveDiscussion(discussion: Discussion): Promise<TFile> {
     const filePath = this.getDiscussionFilePath(discussion);
-    console.table(discussion);
     const content = this.generateDiscussionMarkdown(discussion);
 
     try {
@@ -25,21 +27,29 @@ export class FileManager {
       
       let file: TFile;
       if (existingFile instanceof TFile) {
-        // Update existing file
-        await this.vault.modify(existingFile, content);
+        // File already exists - check if remote is newer
+        const shouldUpdate = await this.checkAndConfirmUpdate(existingFile, discussion);
+        
+        if (shouldUpdate) {
+          await this.vault.modify(existingFile, content);
+          console.log(`Updated discussion #${discussion.number} from GitHub`);
+        } else {
+          console.log(`Discussion #${discussion.number} file already exists, keeping local version`);
+        }
         file = existingFile;
       } else {
-        // Create new file
+        // Create new file only if it doesn't exist
         file = await this.vault.create(filePath, content);
+        console.log(`Created new discussion file #${discussion.number} at ${filePath}`);
       }
 
-      console.log(`Saved discussion #${discussion.number} to ${filePath}`);
       return file;
     } catch (error) {
       console.error(`Failed to save discussion #${discussion.number}:`, error);
       throw error;
     }
   }
+
 
   async loadDiscussion(discussionNumber: number): Promise<string | null> {
     const filePath = this.getDiscussionFilePathByNumber(discussionNumber);
@@ -64,44 +74,33 @@ export class FileManager {
 
   async openDiscussionInEditor(discussionNumber: number): Promise<void> {
     const file = await this.getDiscussionFile(discussionNumber);
-    if (file) {
-      const leaf = (window as any).app.workspace.getLeaf(true);
-      await leaf.openFile(file);
-    }
-  }
-
-  async deleteDiscussion(discussionNumber: number): Promise<void> {
-    const filePath = this.getDiscussionFilePathByNumber(discussionNumber);
+    console.log(`Attempting to open discussion #${discussionNumber}, file found:`, !!file);
     
-    try {
-      const file = this.vault.getAbstractFileByPath(filePath);
-      if (file instanceof TFile) {
-        await this.vault.delete(file);
-        console.log(`Deleted discussion #${discussionNumber}`);
+    if (file) {
+      const workspace = this.app.workspace;
+      
+      // Check if the file is already open in any leaf
+      const existingLeaf = workspace.getLeavesOfType('markdown').find((leaf) => {
+        return (leaf.view as any).file && (leaf.view as any).file.path === file.path;
+      });
+      
+      if (existingLeaf) {
+        // File is already open, focus the existing leaf
+        workspace.setActiveLeaf(existingLeaf);
+        workspace.revealLeaf(existingLeaf);
+        console.log(`Focused existing tab for discussion #${discussionNumber}`);
+      } else {
+        // File is not open, create new leaf
+        const leaf = workspace.getLeaf(true);
+        await leaf.openFile(file);
+        console.log(`Opened discussion #${discussionNumber} in new tab`);
       }
-    } catch (error) {
-      console.error(`Failed to delete discussion #${discussionNumber}:`, error);
-      throw error;
+    } else {
+      console.error(`No file found for discussion #${discussionNumber}`);
     }
   }
 
-  async getAllDiscussionFiles(): Promise<TFile[]> {
-    const discussionsFolder = this.vault.getAbstractFileByPath(this.settings.discussionsFolder);
-    const discussionFiles: TFile[] = [];
 
-    if (discussionsFolder instanceof TFolder && discussionsFolder.children) {
-      for (const child of discussionsFolder.children) {
-        if (child instanceof TFile && child.extension === 'md') {
-          const filename = child.basename;
-          if (filename.match(/^discussion-\d+$/)) {
-            discussionFiles.push(child);
-          }
-        }
-      }
-    }
-
-    return discussionFiles;
-  }
 
 
   private getDiscussionFilePath(discussion: Discussion): string {
@@ -278,6 +277,41 @@ ${discussion.body}
       }
 
       if (discussionService) {
+        // Check if there's a newer version on GitHub before updating
+        const currentRemoteDiscussion = await discussionService.getDiscussion(discussionNumber);
+        if (!currentRemoteDiscussion) {
+          return { success: false, error: `Discussion #${discussionNumber} not found on GitHub` };
+        }
+
+        // Check if remote version is newer than last sync
+        if (parsed.metadata.lastSynced) {
+          const lastSynced = new Date(parsed.metadata.lastSynced);
+          const remoteUpdated = new Date(currentRemoteDiscussion.updatedAt);
+          
+          if (remoteUpdated > lastSynced) {
+            console.log(`Remote discussion #${discussionNumber} has been updated since last sync`);
+            console.log(`Local last synced: ${lastSynced.toISOString()}`);
+            console.log(`Remote updated: ${remoteUpdated.toISOString()}`);
+            
+            // Show confirmation modal
+            const modal = new UpdateConfirmModal(
+              this.app,
+              discussionNumber,
+              lastSynced,
+              remoteUpdated,
+              `⚠️ Warning: The discussion on GitHub has been updated since your last sync. 
+              
+Pushing your changes will overwrite the remote version. Do you want to continue?`
+            );
+            modal.open();
+            const shouldProceed = await modal.waitForResult();
+            
+            if (!shouldProceed) {
+              return { success: false, error: 'Push cancelled by user' };
+            }
+          }
+        }
+
         // Update the discussion via GitHub API
         const updateInput = {
           discussionId: parsed.metadata.id,
@@ -381,6 +415,62 @@ ${body}
     }
   }
 
+
+  private async checkAndConfirmUpdate(existingFile: TFile, discussion: Discussion): Promise<boolean> {
+    try {
+      // Read existing file to get last sync date from frontmatter
+      const existingContent = await this.vault.read(existingFile);
+      const existingMetadata = this.parseDiscussionMetadata(existingContent);
+      
+      if (!existingMetadata || !existingMetadata.lastSynced) {
+        // No sync date found, assume local file is older
+        console.log('No lastSynced found in existing file, showing update confirmation');
+        
+        const modal = new UpdateConfirmModal(
+          this.app,
+          discussion.number,
+          new Date(0), // Unknown local date
+          new Date(discussion.updatedAt)
+        );
+        modal.open();
+        return await modal.waitForResult();
+      }
+      
+      const lastSynced = new Date(existingMetadata.lastSynced);
+      const remoteUpdated = new Date(discussion.updatedAt);
+      
+      // Check if remote is newer than last sync
+      if (remoteUpdated > lastSynced) {
+        console.log(`Discussion #${discussion.number} has newer version on GitHub`);
+        console.log(`Local last synced: ${lastSynced.toISOString()}`);
+        console.log(`Remote updated: ${remoteUpdated.toISOString()}`);
+        
+        const modal = new UpdateConfirmModal(
+          this.app,
+          discussion.number,
+          lastSynced,
+          remoteUpdated
+        );
+        modal.open();
+        return await modal.waitForResult();
+      }
+      
+      // Local is up to date
+      return false;
+      
+    } catch (error) {
+      console.error('Error checking update status:', error);
+      // If we can't determine, ask the user
+      const modal = new UpdateConfirmModal(
+        this.app,
+        discussion.number,
+        new Date(0),
+        new Date(discussion.updatedAt)
+      );
+      modal.open();
+      return await modal.waitForResult();
+    }
+  }
 
   updateSettings(settings: PluginSettings): void {
     this.settings = settings;

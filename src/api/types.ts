@@ -26,22 +26,6 @@ export interface Discussion {
   };
 }
 
-export interface DiscussionComment {
-  id: string;
-  body: string;
-  createdAt: string;
-  updatedAt: string;
-  author: {
-    login: string;
-    avatarUrl: string;
-  };
-  isAnswer: boolean;
-  upvoteCount: number;
-  url: string;
-  replies?: {
-    nodes: DiscussionComment[];
-  };
-}
 
 export interface DiscussionCategory {
   id: string;
@@ -62,12 +46,6 @@ export interface Repository {
   };
 }
 
-export interface CreateDiscussionInput {
-  repositoryId: string;
-  categoryId: string;
-  title: string;
-  body: string;
-}
 
 export interface UpdateDiscussionInput {
   discussionId: string;
@@ -75,11 +53,6 @@ export interface UpdateDiscussionInput {
   body?: string;
 }
 
-export interface AddDiscussionCommentInput {
-  discussionId: string;
-  body: string;
-  replyToId?: string;
-}
 
 export interface DiscussionConnection {
   nodes: Discussion[];

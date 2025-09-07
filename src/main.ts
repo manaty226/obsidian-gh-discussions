@@ -25,7 +25,7 @@ export default class GitHubDiscussionsPlugin extends Plugin {
     await this.loadSettings();
 
     this.githubClient = new GitHubClient(this.settings.githubToken);
-    this.discussionService = new DiscussionService(this.githubClient, this.settings);
+    this.discussionService = new DiscussionService(this.githubClient, this.settings, this.app);
 
     this.registerView(
       'discussion-list',
@@ -73,7 +73,7 @@ export default class GitHubDiscussionsPlugin extends Plugin {
   async saveSettings() {
     await this.saveData(this.settings);
     this.githubClient = new GitHubClient(this.settings.githubToken);
-    this.discussionService = new DiscussionService(this.githubClient, this.settings);
+    this.discussionService = new DiscussionService(this.githubClient, this.settings, this.app);
   }
 
   private isConfigured(): boolean {
@@ -103,9 +103,9 @@ export default class GitHubDiscussionsPlugin extends Plugin {
 
     try {
       await this.discussionService.syncDiscussions();
-      console.log('Discussions synced successfully');
+      console.log('Discussion data refreshed successfully');
     } catch (error) {
-      console.error('Failed to sync discussions:', error);
+      console.error('Failed to refresh discussion data:', error);
     }
   }
 

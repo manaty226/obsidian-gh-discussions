@@ -43,8 +43,18 @@ export const DiscussionList: React.FC<DiscussionListProps> = ({ discussionServic
 
   const handleOpenMarkdown = async (discussion: Discussion) => {
     try {
+      console.log(`Opening discussion #${discussion.number} as markdown`);
+      
+      // First, fetch the latest version of the discussion from GitHub
+      const latestDiscussion = await discussionService.getDiscussion(discussion.number);
+      if (!latestDiscussion) {
+        console.error(`Failed to fetch latest discussion #${discussion.number}`);
+        return;
+      }
+      
       const fileManager = (discussionService as any).fileManager;
-      await fileManager.saveDiscussion(discussion);
+      const file = await fileManager.saveDiscussion(latestDiscussion);
+      console.log('File saved successfully:', file.path);
       await fileManager.openDiscussionInEditor(discussion.number);
     } catch (error: any) {
       console.error('Failed to open discussion as markdown:', error);

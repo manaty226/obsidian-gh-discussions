@@ -1,10 +1,10 @@
 {
   "id": "obsidian-github-discussions",
   "name": "GitHub Discussions",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "minAppVersion": "0.15.0",
   "description": "View and edit GitHub Discussions directly in Obsidian",
-  "author": "Your Name",
-  "authorUrl": "",
+  "author": "manaty226",
+  "authorUrl": "https://github.com/manaty226",
   "isDesktopOnly": false
 }

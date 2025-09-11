@@ -1,6 +1,6 @@
 {
   "name": "obsidian-github-discussions",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Obsidian plugin to view and edit GitHub Discussions",
   "main": "main.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "github",
     "discussions"
   ],
-  "author": "Your Name",
+  "author": "manaty226",
   "license": "MIT",
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.7",

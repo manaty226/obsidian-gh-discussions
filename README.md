@@ -4,11 +4,10 @@ A plugin that allows you to view and edit GitHub Discussions directly within Obs
 
 ## Features
 
-- 📖 View GitHub Discussions as Obsidian Markdown files
-- ✏️ Edit Discussions in Obsidian and sync changes to GitHub
-- 🔄 Synchronize repository Discussions with local files
-- 🏷️ Filter by categories
-- 📂 Organize Discussions in a designated folder
+- 📖 View and edit GitHub Discussions as clean Obsidian notes
+- 🔄 Two-way sync between GitHub and your vault
+- 💬 Display comments inline with discussion content
+- 🏷️ Filter and organize discussions by category
 
 ## Installation
 
@@ -25,10 +24,8 @@ npm install
 npm run build
 ```
 
-3. Copy the built files (`main.js`, `manifest.json`, `styles.css`) to your Obsidian plugins folder:
-   - Windows: `%APPDATA%\Obsidian\plugins\obsidian-github-discussions\`
-   - Mac: `~/Library/Application Support/obsidian/plugins/obsidian-github-discussions/`
-   - Linux: `~/.config/obsidian/plugins/obsidian-github-discussions/`
+3. Copy the built files (`main.js`, `manifest.json`, `styles.css`) to your vault's plugins folder:
+   - `[YOUR_VAULT]/.obsidian/plugins/obsidian-github-discussions/`
 
 4. Restart Obsidian and enable the plugin in Settings
 
@@ -68,11 +65,11 @@ Discussions are saved in the following format:
 ```
 VaultRoot/
 └── Discussions/
-    ├── discussion-1.md
-    ├── discussion-2.md
+    ├── How to use this feature.md
+    ├── Bug report about login.md
     └── ...
 ```
-The title of those files are defined by the discussion number of GitHub Discussions.
+Files are named using the discussion title and contain metadata in the frontmatter (which is hidden from view).
 
 ## Development
 

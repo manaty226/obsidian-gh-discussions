@@ -4,6 +4,7 @@ import { SettingsTab } from './settings/settings-tab';
 import { DiscussionListView } from './views/discussion-list-view';
 import { GitHubClient } from './api/github-client';
 import { DiscussionService } from './api/discussion-service';
+import { CommentBlockProcessor } from './components/CommentBlockProcessor';
 
 const DEFAULT_SETTINGS: PluginSettings = {
   githubToken: '',
@@ -18,6 +19,7 @@ export default class GitHubDiscussionsPlugin extends Plugin {
   settings: PluginSettings;
   githubClient: GitHubClient;
   discussionService: DiscussionService;
+  commentProcessor: CommentBlockProcessor;
 
   async onload() {
     console.log('Loading GitHub Discussions plugin');
@@ -26,6 +28,7 @@ export default class GitHubDiscussionsPlugin extends Plugin {
 
     this.githubClient = new GitHubClient(this.settings.githubToken);
     this.discussionService = new DiscussionService(this.githubClient, this.settings, this.app);
+    this.commentProcessor = new CommentBlockProcessor(this.discussionService);
 
     this.registerView(
       'discussion-list',
@@ -53,7 +56,10 @@ export default class GitHubDiscussionsPlugin extends Plugin {
       }
     });
 
-
+    // Register comment block processor
+    this.registerMarkdownCodeBlockProcessor('gh-comments', (source, el, ctx) => {
+      this.commentProcessor.processCommentBlock(source, el, ctx);
+    });
 
     this.addSettingTab(new SettingsTab(this.app, this));
 
@@ -74,6 +80,7 @@ export default class GitHubDiscussionsPlugin extends Plugin {
     await this.saveData(this.settings);
     this.githubClient = new GitHubClient(this.settings.githubToken);
     this.discussionService = new DiscussionService(this.githubClient, this.settings, this.app);
+    this.commentProcessor = new CommentBlockProcessor(this.discussionService);
   }
 
   private isConfigured(): boolean {

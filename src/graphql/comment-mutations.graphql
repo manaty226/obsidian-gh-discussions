@@ -1,0 +1,17 @@
+mutation AddDiscussionComment($input: AddDiscussionCommentInput!) {
+  addDiscussionComment(input: $input) {
+    comment {
+      id
+      body
+      createdAt
+      updatedAt
+      author {
+        login
+        avatarUrl
+      }
+      isAnswer
+      upvoteCount
+      url
+    }
+  }
+}

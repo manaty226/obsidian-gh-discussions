@@ -1,4 +1,4 @@
-import { TFile, Vault, normalizePath, App } from 'obsidian';
+import { TFile, TFolder, Vault, normalizePath, App } from 'obsidian';
 import { Discussion } from '../api/types';
 import { PluginSettings } from '../settings/settings';
 import { UpdateConfirmModal } from '../components/UpdateConfirmModal';
@@ -52,7 +52,7 @@ export class FileManager {
 
 
   async loadDiscussion(discussionNumber: number): Promise<string | null> {
-    const filePath = this.getDiscussionFilePathByNumber(discussionNumber);
+    const filePath = await this.getDiscussionFilePathByNumber(discussionNumber);
     
     try {
       const file = this.vault.getAbstractFileByPath(filePath);
@@ -67,7 +67,7 @@ export class FileManager {
   }
 
   async getDiscussionFile(discussionNumber: number): Promise<TFile | null> {
-    const filePath = this.getDiscussionFilePathByNumber(discussionNumber);
+    const filePath = await this.getDiscussionFilePathByNumber(discussionNumber);
     const file = this.vault.getAbstractFileByPath(filePath);
     return file instanceof TFile ? file : null;
   }
@@ -104,11 +104,43 @@ export class FileManager {
 
 
   private getDiscussionFilePath(discussion: Discussion): string {
-    const filename = `discussion-${discussion.number}.md`;
+    const sanitizedTitle = this.sanitizeFilename(discussion.title);
+    const filename = `${sanitizedTitle}.md`;
     return normalizePath(`${this.settings.discussionsFolder}/${filename}`);
   }
 
-  private getDiscussionFilePathByNumber(discussionNumber: number): string {
+  private sanitizeFilename(title: string): string {
+    // Remove or replace characters that are not safe for filenames
+    return title
+      .replace(/[<>:"/\\|?*]/g, '-') // Replace invalid chars with dash
+      .replace(/[\r\n\t]/g, ' ') // Replace line breaks with space
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .trim()
+      .substring(0, 200); // Limit length to prevent very long filenames
+  }
+
+  private async getDiscussionFilePathByNumber(discussionNumber: number): Promise<string> {
+    // First try to find by discussion number in metadata
+    const folderPath = normalizePath(this.settings.discussionsFolder);
+    const folder = this.vault.getAbstractFileByPath(folderPath);
+    
+    if (folder instanceof TFolder) {
+      for (const child of folder.children) {
+        if (child instanceof TFile && child.extension === 'md') {
+          try {
+            const content = await this.vault.read(child);
+            const metadata = this.parseDiscussionMetadata(content);
+            if (metadata && metadata.number === discussionNumber) {
+              return child.path;
+            }
+          } catch (error) {
+            // Continue searching if this file can't be read
+          }
+        }
+      }
+    }
+    
+    // Fallback to old naming convention
     const filename = `discussion-${discussionNumber}.md`;
     return normalizePath(`${this.settings.discussionsFolder}/${filename}`);
   }
@@ -144,9 +176,13 @@ export class FileManager {
 ${frontmatterText}
 ---
 
-# ${discussion.title}
-
 ${discussion.body}
+
+## Comments
+
+\`\`\`gh-comments
+discussion: ${discussion.number}
+\`\`\`
 `;
   }
 
@@ -361,9 +397,13 @@ Pushing your changes will overwrite the remote version. Do you want to continue?
 ${frontmatterText}
 ---
 
-# ${title}
-
 ${body}
+
+## Comments
+
+\`\`\`gh-comments
+discussion: ${metadata.number}
+\`\`\`
 `;
   }
 
@@ -383,28 +423,25 @@ ${body}
         return null;
       }
 
-      // Extract title from first heading
-      let title = 'Untitled';
-      const titleMatch = markdownContent.match(/^# (.+)$/m);
-      if (titleMatch) {
-        title = titleMatch[1].trim();
-      }
+      // Use title from metadata, not from content
+      const title = metadata.title || 'Untitled';
 
-      // Extract discussion body - everything after the title heading
-      const bodyRegex = /^# .+?\n\n([\s\S]*)$/;
+      // Extract discussion body - everything before "## Comments"
+      const bodyRegex = /([\s\S]*?)(?=\n## Comments|$)/;
       const bodyMatch = markdownContent.match(bodyRegex);
       let body = '';
       
       if (bodyMatch) {
         body = bodyMatch[1].trim();
       } else {
-        // Fallback: remove title line and get the rest
+        // Fallback: everything except the comments section
         const lines = markdownContent.split('\n');
-        const titleLineIndex = lines.findIndex(line => line.startsWith('# '));
-        if (titleLineIndex !== -1) {
-          body = lines.slice(titleLineIndex + 1).join('\n').trim();
-          // Remove empty lines at the beginning
-          body = body.replace(/^\n+/, '');
+        const commentsLineIndex = lines.findIndex(line => line.startsWith('## Comments'));
+        
+        if (commentsLineIndex !== -1) {
+          body = lines.slice(0, commentsLineIndex).join('\n').trim();
+        } else {
+          body = markdownContent.trim();
         }
       }
 
@@ -526,7 +563,7 @@ ${body}
       if (file) {
         await this.vault.modify(file, repairedContent);
       } else {
-        const filePath = this.getDiscussionFilePathByNumber(discussionNumber);
+        const filePath = await this.getDiscussionFilePathByNumber(discussionNumber);
         await this.ensureFolderExists(this.settings.discussionsFolder);
         await this.vault.create(filePath, repairedContent);
       }

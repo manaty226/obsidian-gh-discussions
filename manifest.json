@@ -6,5 +6,6 @@
   "description": "View and edit GitHub Discussions directly in Obsidian",
   "author": "manaty226",
   "authorUrl": "https://github.com/manaty226",
-  "isDesktopOnly": false
+  "isDesktopOnly": false,
+  "css": "styles.css"
 }

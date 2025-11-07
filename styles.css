@@ -447,3 +447,239 @@
     padding: 32px 20px;
   }
 }
+
+/* Hide GitHub Discussions Frontmatter */
+/* Hide frontmatter for files containing gh-comments blocks (GitHub Discussions files) */
+.workspace-leaf-content[data-type="markdown"]:has(.cm-line:contains("gh-comments")) .frontmatter,
+.workspace-leaf-content[data-type="markdown"]:has(.cm-line:contains("gh-comments")) .metadata-container,
+.workspace-leaf-content[data-type="markdown"]:has(.cm-line:contains("gh-comments")) .frontmatter-container {
+  display: none !important;
+}
+
+/* Hide frontmatter in source mode */
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("---"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("id:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("number:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("title:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("author:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("created:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("updated:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("githubUrl:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("category:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("categoryId:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("upvoteCount:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("commentCount:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("locked:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("answered:"),
+.workspace-leaf-content[data-type="markdown"]:has(.cm-content:contains("gh-comments")) .cm-line:contains("lastSynced:") {
+  display: none !important;
+}
+
+/* GitHub Discussions Comment Block Styles */
+
+.gh-comments-container {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 16px;
+  margin: 16px 0;
+  background-color: var(--background-primary);
+}
+
+.gh-comments-header h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.2em;
+  color: var(--text-normal);
+}
+
+.gh-comments-list {
+  margin-top: 16px;
+}
+
+.gh-comment {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  margin-bottom: 16px;
+  background-color: var(--background-secondary);
+}
+
+.gh-comment-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background-color: var(--background-modifier-hover);
+}
+
+.gh-comment-avatar, .gh-reply-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.gh-comment-author, .gh-reply-author {
+  flex-grow: 1;
+}
+
+.gh-comment-date, .gh-reply-date {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.gh-comment-answer-badge {
+  background-color: var(--color-green);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.8em;
+  margin-left: 8px;
+}
+
+.gh-comment-upvotes, .gh-reply-upvotes {
+  color: var(--text-muted);
+  font-size: 0.9em;
+  margin-left: 8px;
+}
+
+.gh-comment-body, .gh-reply-body {
+  padding: 16px;
+  line-height: 1.5;
+}
+
+.gh-comment-body code, .gh-reply-body code {
+  background-color: var(--background-modifier-border);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: var(--font-monospace);
+}
+
+.gh-comment-actions {
+  padding: 8px 16px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.gh-reply-button {
+  background-color: transparent;
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.gh-reply-button:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.gh-comment-replies {
+  margin: 16px;
+  padding-left: 20px;
+  border-left: 2px solid var(--background-modifier-border);
+}
+
+.gh-replies-separator {
+  text-align: center;
+  color: var(--text-muted);
+  margin: 12px 0;
+  font-size: 1.2em;
+}
+
+.gh-reply {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  margin-bottom: 12px;
+  background-color: var(--background-primary);
+}
+
+.gh-reply-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background-color: var(--background-modifier-hover);
+}
+
+.gh-comment-separator {
+  height: 1px;
+  background-color: var(--background-modifier-border);
+  margin: 20px 0;
+}
+
+.gh-new-comment-form, .gh-reply-form {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+  background-color: var(--background-secondary);
+}
+
+.gh-comment-textarea, .gh-reply-textarea {
+  width: 100%;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  padding: 8px;
+  resize: vertical;
+  font-family: var(--font-text);
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+}
+
+.gh-comment-textarea:focus, .gh-reply-textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.gh-form-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.gh-submit-button {
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.gh-submit-button:hover {
+  opacity: 0.9;
+}
+
+.gh-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gh-cancel-button {
+  background-color: transparent;
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.gh-cancel-button:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.gh-discussion-error {
+  color: var(--color-red);
+  padding: 12px;
+  background-color: var(--background-modifier-error);
+  border-radius: 4px;
+  border: 1px solid var(--color-red);
+}
+
+.gh-no-comments {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 20px;
+}

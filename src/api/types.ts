@@ -1,3 +1,20 @@
+export interface DiscussionComment {
+  id: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  author: {
+    login: string;
+    avatarUrl: string;
+  };
+  isAnswer: boolean;
+  upvoteCount: number;
+  url: string;
+  replies?: {
+    nodes?: DiscussionComment[];
+  };
+}
+
 export interface Discussion {
   id: string;
   number: number;
@@ -16,6 +33,7 @@ export interface Discussion {
   };
   comments: {
     totalCount: number;
+    nodes?: DiscussionComment[];
   };
   upvoteCount: number;
   url: string;

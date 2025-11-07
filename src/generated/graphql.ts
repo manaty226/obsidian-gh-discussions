@@ -32398,6 +32398,13 @@ export type WorkflowsParametersInput = {
   workflows: Array<WorkflowFileReferenceInput>;
 };
 
+export type AddDiscussionCommentMutationVariables = Exact<{
+  input: AddDiscussionCommentInput;
+}>;
+
+
+export type AddDiscussionCommentMutation = { __typename?: 'Mutation', addDiscussionComment?: { __typename?: 'AddDiscussionCommentPayload', comment?: { __typename?: 'DiscussionComment', id: string, body: string, createdAt: any, updatedAt: any, isAnswer: boolean, upvoteCount: number, url: any, author?: { __typename?: 'Bot', login: string, avatarUrl: any } | { __typename?: 'EnterpriseUserAccount', login: string, avatarUrl: any } | { __typename?: 'Mannequin', login: string, avatarUrl: any } | { __typename?: 'Organization', login: string, avatarUrl: any } | { __typename?: 'User', login: string, avatarUrl: any } | null } | null } | null };
+
 export type GetDiscussionsQueryVariables = Exact<{
   owner: Scalars['String']['input'];
   name: Scalars['String']['input'];
@@ -32433,6 +32440,25 @@ export type UpdateDiscussionMutationVariables = Exact<{
 export type UpdateDiscussionMutation = { __typename?: 'Mutation', updateDiscussion?: { __typename?: 'UpdateDiscussionPayload', discussion?: { __typename?: 'Discussion', id: string, number: number, title: string, body: string, createdAt: any, updatedAt: any, upvoteCount: number, url: any, locked: boolean, answerChosenAt?: any | null, author?: { __typename?: 'Bot', login: string, avatarUrl: any } | { __typename?: 'EnterpriseUserAccount', login: string, avatarUrl: any } | { __typename?: 'Mannequin', login: string, avatarUrl: any } | { __typename?: 'Organization', login: string, avatarUrl: any } | { __typename?: 'User', login: string, avatarUrl: any } | null, category: { __typename?: 'DiscussionCategory', id: string, name: string, emoji: string }, comments: { __typename?: 'DiscussionCommentConnection', totalCount: number, nodes?: Array<{ __typename?: 'DiscussionComment', id: string, body: string, createdAt: any, updatedAt: any, isAnswer: boolean, upvoteCount: number, url: any, author?: { __typename?: 'Bot', login: string, avatarUrl: any } | { __typename?: 'EnterpriseUserAccount', login: string, avatarUrl: any } | { __typename?: 'Mannequin', login: string, avatarUrl: any } | { __typename?: 'Organization', login: string, avatarUrl: any } | { __typename?: 'User', login: string, avatarUrl: any } | null, replies: { __typename?: 'DiscussionCommentConnection', nodes?: Array<{ __typename?: 'DiscussionComment', id: string, body: string, createdAt: any, updatedAt: any, upvoteCount: number, url: any, author?: { __typename?: 'Bot', login: string, avatarUrl: any } | { __typename?: 'EnterpriseUserAccount', login: string, avatarUrl: any } | { __typename?: 'Mannequin', login: string, avatarUrl: any } | { __typename?: 'Organization', login: string, avatarUrl: any } | { __typename?: 'User', login: string, avatarUrl: any } | null } | null> | null } } | null> | null }, answerChosenBy?: { __typename?: 'Bot', login: string } | { __typename?: 'EnterpriseUserAccount', login: string } | { __typename?: 'Mannequin', login: string } | { __typename?: 'Organization', login: string } | { __typename?: 'User', login: string } | null } | null } | null };
 
 
+export const AddDiscussionCommentDocument = `
+    mutation AddDiscussionComment($input: AddDiscussionCommentInput!) {
+  addDiscussionComment(input: $input) {
+    comment {
+      id
+      body
+      createdAt
+      updatedAt
+      author {
+        login
+        avatarUrl
+      }
+      isAnswer
+      upvoteCount
+      url
+    }
+  }
+}
+    `;
 export const GetDiscussionsDocument = `
     query GetDiscussions($owner: String!, $name: String!, $first: Int!, $after: String) {
   repository(owner: $owner, name: $name) {
@@ -32625,6 +32651,9 @@ const defaultWrapper: SdkFunctionWrapper = (action, _operationName, _operationTy
 
 export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = defaultWrapper) {
   return {
+    AddDiscussionComment(variables: AddDiscussionCommentMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<AddDiscussionCommentMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<AddDiscussionCommentMutation>({ document: AddDiscussionCommentDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'AddDiscussionComment', 'mutation', variables);
+    },
     GetDiscussions(variables: GetDiscussionsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetDiscussionsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetDiscussionsQuery>({ document: GetDiscussionsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetDiscussions', 'query', variables);
     },

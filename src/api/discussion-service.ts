@@ -13,7 +13,8 @@ import {
   GetDiscussionsDocument,
   GetDiscussionDocument,
   GetRepositoryDocument,
-  UpdateDiscussionDocument
+  UpdateDiscussionDocument,
+  AddDiscussionCommentDocument
 } from '../generated/graphql';
 
 
@@ -119,5 +120,20 @@ export class DiscussionService {
 
   async repairDiscussionMetadata(discussionNumber: number): Promise<{ success: boolean; error?: string }> {
     return await this.fileManager.repairDiscussionMetadata(discussionNumber, this);
+  }
+
+  async addComment(discussionId: string, body: string, replyToId?: string): Promise<any> {
+    const response = await this.client.mutation<{ addDiscussionComment: { comment: any } }>(
+      AddDiscussionCommentDocument,
+      {
+        input: {
+          discussionId,
+          body,
+          replyToId
+        }
+      }
+    );
+
+    return response.addDiscussionComment.comment;
   }
 }
